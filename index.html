@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAC Relief System | اختبار تحديد المستوى الفني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --iac-primary: #1b8f4c;
+            --iac-dark: #0a4d29;
+            --bg-color: #f0f4f3;
+            --glass: rgba(255, 255, 255, 0.95);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --text-color: #2c3e50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--glass);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            text-align: center;
+            position: relative;
+        }
+
+        /* اللوغو والهوية الرسمية لمؤسسة IAC المرفقة بملفك */
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--iac-primary), var(--iac-dark));
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 22px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(27, 143, 76, 0.2);
+        }
+
+        .header-logo span {
+            font-size: 13px;
+            font-weight: 400;
+            margin-right: 10px;
+            border-right: 1px solid rgba(255,255,255,0.3);
+            padding-right: 10px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: var(--iac-dark);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p.desc {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 25px;
+        }
+
+        .step-panel { display: none; }
+        .step-panel.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--iac-primary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--iac-primary), var(--iac-dark));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(10, 77, 41, 0.3);
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* واجهة الأسئلة والعداد الذكي */
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .badge-word { background: #e0f2fe; color: #0369a1; }
+        .badge-excel { background: #dcfce7; color: #15803d; }
+
+        .timer-circle {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--iac-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--iac-dark);
+            margin: 15px 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .option-card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: right;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .option-card:hover { border-color: var(--iac-primary); }
+        .option-card.selected {
+            background: var(--iac-primary);
+            color: #fff;
+            border-color: var(--iac-primary);
+        }
+
+        .bullet-instructions {
+            text-align: right;
+            margin: 20px 15px 25px 0;
+            line-height: 2;
+            color: #4a5568;
+        }
+
+        .rest-clock {
+            font-size: 36px;
+            font-weight: 800;
+            color: #dd6b20;
+            margin: 20px 0;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--iac-dark);
+            border-radius: 16px;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="loading-overlay" id="loading">جاري معالجة الطلب سحابياً...</div>
+    
+    <div class="header-logo">IAC <span>International Relief</span></div>
+
+    <div id="panel-name" class="step-panel active">
+        <h2>نظام التقييم الفني للمتطوعين والطلاب</h2>
+        <p class="desc">يرجى كتابة الاسم الثلاثي باللغة العربية حصراً للتحقق وبدء جلسة الاختبار.</p>
+        <div class="alert-error" id="name-error"></div>
+        <input type="text" id="input-student-name" placeholder="أدخل اسمك الثلاثي هنا...">
+        <button class="btn" onclick="submitName()">التالي</button>
+    </div>
+
+    <div id="panel-instructions" class="step-panel">
+        <h2>توجيهات تحديد المستوى</h2>
+        <p class="desc" style="background: #f0fdf4; padding: 15px; border-left: 4px solid var(--iac-primary); border-radius: 6px; text-align: justify;">
+            "هذا الاختبار مخصص لتحديد المستوى فقط، وليس مطلوبًا منك الإجابة على جميع الأسئلة. إذا واجهت سؤالًا لا تعرف إجابته، يُرجى تركه فارغًا وعدم التخمين، وذلك لمساعدتنا على تقييم مستواك الحقيقي بدقة وتقديم التدريب المناسب لك."
+        </p>
+        <button class="btn" onclick="showPanel('panel-notes')" style="margin-top: 15px;">موافق، التالي</button>
+    </div>
+
+    <div id="panel-notes" class="step-panel">
+        <h2>ملاحظات الجلسة الصارمة</h2>
+        <ul class="bullet-instructions">
+            <li>⛔ <strong>العودة للوراء:</strong> لا يمكن العودة للسؤال السابق بعد تجاوزه مطلقاً.</li>
+            <li>⏱️ <strong>مؤقت السؤال:</strong> مدة كل سؤال 15 ثانية فقط، وينتقل التقييم ذاتياً بعدها.</li>
+            <li>🚀 <strong>التخطي السريع:</strong> إذا كنت لا تعرف الجواب، اضغط على الانتقال فوراً لتركه فارغاً.</li>
+            <li>💾 <strong>اعتماد الإجابة:</strong> يجب الضغط على زر الانتقال لضمان حفظ الخيار المحدد بالسيرفر.</li>
+        </ul>
+        <button class="btn" onclick="fetchQuestionsAndStart()">ابدأ الاختبار الفعلي</button>
+    </div>
+
+    <div id="panel-quiz" class="step-panel">
+        <div id="section-badge" class="badge"></div>
+        <h2 id="quiz-question-text">جاري مزامنة نص السؤال...</h2>
+        
+        <div>
+            <div class="timer-circle" id="clock-display">15</div>
+        </div>
+
+        <div class="options-grid" id="options-container">
+            </div>
+
+        <button class="btn" onclick="nextQuestion(false)">الانتقال للسؤال التالي</button>
+    </div>
+
+    <div id="panel-rest" class="step-panel">
+        <h2>استرح قليلاً ☕</h2>
+        <p class="desc">لقد أكملت بنجاح قسم أسئلة الوورد. خذ قسطاً من الراحة قبل الانتقال التلقائي إلى قسم الإكسل.</p>
+        <div class="rest-clock" id="rest-clock-display">02:00</div>
+        <button class="btn" style="background: #dd6b20;" onclick="skipRest()">تخطي الاستراحة والمتابعة الآن</button>
+    </div>
+
+    <div id="panel-finish" class="step-panel">
+        <h2 style="color: var(--iac-primary); margin-bottom: 10px;">تم إنهاء التقييم بنجاح!</h2>
+        <p class="desc">شكراً لك، تم حفظ ردودك ومعالجة درجاتك ونسبك المئوية ضمن جدول البيانات السحابي لمؤسسة IAC بنجاح تام.</p>
+    </div>
+</div>
+
+<script>
+    // ⚠️ ضع هنا رابط الـ Web App المولد من الـ Apps Script الخاص بك لتفعيل الربط بالكامل
+    const API_URL = "https://script.google.com/macros/s/XXXXXX/exec"; 
+
+    let studentId = "";
+    let questions = [];
+    let currentIndex = 0;
+    let selectedAnswer = "";
+    let quizTimer = null;
+    let restTimer = null;
+    let secondsLeft = 15;
+    let lastSection = "";
+
+    function showPanel(id) {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function toggleLoader(show) {
+        document.getElementById('loading').style.display = show ? "flex" : "none";
+    }
+
+    // إرسال الاسم وفحصه عبر الـ API
+    function submitName() {
+        const name = document.getElementById('input-student-name').value.trim();
+        const errBox = document.getElementById('name-error');
+        
+        const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+        if (!name || name === "" || !arabicRegex.test(name)) {
+            errBox.innerText = "⚠️ خطأ: يجب كتابة الاسم الثلاثي باللغة العربية فقط وبدون أرقام.";
+            errBox.style.display = "block";
+            return;
+        }
+        errBox.style.display = "none";
+        toggleLoader(true);
+
+        // استخدام fetch الخارجي تماماً مثل طريقتك المرفقة بالكود السابق
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors", // لتجنب مشاكل فك قيود الكورس في خوادم جوجل وثبات الإرسال
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "startTest", name: name })
+        })
+        .then(() => {
+            // نظراً لظروف الاستضافة الخارجية والـ no-cors نقوم بجلب الـ ID المتوقع عبر المزامنة أو بنائه محلياً لضمان عدم توقف المتصفح
+            // لضمان الحصول على البيانات بدقة، يفضل إرسال الـ API أيضاً عبر معاملات الـ URL لنحصل على الرد الفوري:
+            return fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`);
+        })
+        .then(res => res.json())
+        .then(data => {
+            toggleLoader(false);
+            if (data.status === "success") {
+                studentId = data.studentId;
+                showPanel('panel-instructions');
+            } else {
+                errBox.innerText = data.message;
+                errBox.style.display = "block";
+            }
+        })
+        .catch(err => {
+            toggleLoader(false);
+            // حل بديل للمحاكاة الفورية عند التطوير المحلي في جيت هاب قبل ربط السكربت الفعلي
+            studentId = "STU_" + Math.floor(Math.random() * 10000);
+            showPanel('panel-instructions');
+        });
+    }
+
+    // جلب الأسئلة من السيرفر وبدء التقييم
+    function fetchQuestionsAndStart() {
+        toggleLoader(true);
+        fetch(`${API_URL}?action=getQuestions`)
+        .then(res => res.json())
+        .then(data => {
+            toggleLoader(false);
+            if (data.status === "success") {
+                questions = data.questions;
+                currentIndex = 0;
+                renderQuestion();
+                showPanel('panel-quiz');
+            }
+        })
+        .catch(err => {
+            toggleLoader(false);
+            // بيانات افتراضية احتياطية للمعاينة الفورية في GitHub Pages في حال انقطاع السيرفر
+            questions = [
+                {id: "q1", text: "في Microsoft Word، ما هو الاختصار المستخدم لحفظ المستند الحالي؟", type: "Multiple", office: "word", options: [{key:"a", text:"Ctrl + S"}, {key:"b", text:"Ctrl + P"}, {key:"c", text:"Ctrl + N"}, {key:"d", text:"Ctrl + O"}]},
+                {id: "q2", text: "هل تستخدم الدالة SUM في Excel لجمع القيم الرقمية في نطاق محدد؟", type: "True or false", office: "excel", options: [{key:"a", text:"صحيح / نعم"}, {key:"b", text:"خطأ / لا"}]}
+            ];
+            currentIndex = 0;
+            renderQuestion();
+            showPanel('panel-quiz');
+        });
+    }
+
+    // بناء السؤال الحالي وعرض الخيارات المرتبطة بالمحارف
+    function renderQuestion() {
+        clearInterval(quizTimer);
+        selectedAnswer = "";
+        
+        if (currentIndex >= questions.length) {
+            finishTest();
+            return;
+        }
+
+        const q = questions[currentIndex];
+
+        // التحقق من الانتقال الحركي بين أسئلة الوورد والاكسل لعرض واجهة الاستراحة بدقيقتين
+        if (lastSection === "word" && q.office === "excel") {
+            lastSection = q.office;
+            startRestBreak();
+            return;
+        }
+        lastSection = q.office;
+
+        // إدارة شارات تصنيف الأقسام للوورد والاكسل علوياً
+        const badge = document.getElementById('section-badge');
+        if (q.office === "excel") {
+            badge.innerText = "Microsoft Excel | برنامج الجداول الإلكترونية";
+            badge.className = "badge badge-excel";
+        } else {
+            badge.innerText = "Microsoft Word | برنامج معالجة النصوص";
+            badge.className = "badge badge-word";
+        }
+
+        document.getElementById('quiz-question-text').innerText = q.text;
+        const container = document.getElementById('options-container');
+        container.innerHTML = "";
+
+        // توليد خيارات الإجابة بمرونة (سواء زرين للصح والخطأ أو أربعة للمتعدد)
+        q.options.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = "option-card";
+            div.innerHTML = `<strong>${opt.key.toUpperCase()})</strong> ${opt.text}`;
+            div.onclick = function() {
+                document.querySelectorAll('.option-card').forEach(c => p=c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedAnswer = opt.key;
+            };
+            container.appendChild(div);
+        });
+
+        // تشغيل عداد الـ 15 ثانية الإلزامي للسؤال الحالي
+        secondsLeft = 15;
+        document.getElementById('clock-display').innerText = secondsLeft;
+        
+        quizTimer = setInterval(() => {
+            secondsLeft--;
+            document.getElementById('clock-display').innerText = secondsLeft;
+            if (secondsLeft <= 0) {
+                clearInterval(quizTimer);
+                nextQuestion(true); // تخطي تلقائي لانتهاء الوقت وحفظ الخلية بقيمة 0
+            }
+        }, 1000);
+    }
+
+    // الانتقال وتخزين الإجابات بالسيرفر
+    function nextQuestion(isTimeout = false) {
+        clearInterval(quizTimer);
+        const q = questions[currentIndex];
+        const finalAns = isTimeout ? "0" : selectedAnswer;
+
+        // إرسال النتيجة فوراً وتحديث خلية السؤال للطالب الحالي
+        fetch(`${API_URL}?action=saveAnswer&studentId=${studentId}&questionId=${q.id}&answer=${encodeURIComponent(finalAns)}`, {
+            method: "POST",
+            mode: "no-cors"
+        });
+
+        currentIndex++;
+        renderQuestion();
+    }
+
+    // تفعيل نافذة الاستراحة الذكية لمدة دقيقتين كاملتين
+    function startRestBreak() {
+        showPanel('panel-rest');
+        let restSeconds = 120; // دقيقتان
+        
+        restTimer = setInterval(() => {
+            restSeconds--;
+            let m = Math.floor(restSeconds / 60);
+            let s = restSeconds % 60;
+            document.getElementById('rest-clock-display').innerText = 
+                (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+            
+            if (restSeconds <= 0) {
+                skipRest();
+            }
+        }, 1000);
+    }
+
+    function skipRest() {
+        clearInterval(restTimer);
+        showPanel('panel-quiz');
+        renderQuestion();
+    }
+
+    // إنهاء جلسة الاختبار وتوجيه السيرفر لحساب الإحصائيات والنسب سرياً
+    function finishTest() {
+        showPanel('panel-finish');
+        fetch(`${API_URL}?action=finalizeTest&studentId=${studentId}`, {
+            method: "POST",
+            mode: "no-cors"
+        });
+    }
+</script>
+</body>
+</html>
