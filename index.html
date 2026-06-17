@@ -271,10 +271,9 @@
         <p class="desc">شكراً لك، تم حفظ ردودك ومعالجة درجاتك ونسبك المئوية ضمن جدول البيانات السحابي لمؤسسة IAC بنجاح تام.</p>
     </div>
 </div>
-
 <script>
-    // ⚠️ ضع هنا رابط الـ Web App المولد من الـ Apps Script الخاص بك لتفعيل الربط بالكامل
-    const API_URL = "https://script.google.com/macros/s/AKfycbxDFMgUd1NFtT8Uk52EhTGcdRGB7eSCt5Q54i3j2osOgMF8qVSNdIRiX8hpWcPg-EAe/exec"; 
+    // ⚠️ استبدل هذا الرابط بدقة برابط الـ Web App الخاص بك بعد إجراء الـ Deploy الجديد
+    const API_URL = "https://script.google.com/macros/s/AKfycbz_XXXXX_XXXXX/exec"; 
 
     let studentId = "";
     let questions = [];
@@ -294,7 +293,7 @@
         document.getElementById('loading').style.display = show ? "flex" : "none";
     }
 
-    // إرسال الاسم وفحصه عبر الـ API
+    // إرسال الاسم وحل مشكلة الـ CORS عبر الـ GET الموجه
     function submitName() {
         const name = document.getElementById('input-student-name').value.trim();
         const errBox = document.getElementById('name-error');
@@ -308,17 +307,10 @@
         errBox.style.display = "none";
         toggleLoader(true);
 
-        // استخدام fetch الخارجي تماماً مثل طريقتك المرفقة بالكود السابق
-        fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors", // لتجنب مشاكل فك قيود الكورس في خوادم جوجل وثبات الإرسال
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "startTest", name: name })
-        })
-        .then(() => {
-            // نظراً لظروف الاستضافة الخارجية والـ no-cors نقوم بجلب الـ ID المتوقع عبر المزامنة أو بنائه محلياً لضمان عدم توقف المتصفح
-            // لضمان الحصول على البيانات بدقة، يفضل إرسال الـ API أيضاً عبر معاملات الـ URL لنحصل على الرد الفوري:
-            return fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`);
+        // إرسال كـ GET متبوع بالتوجيه الآمن لحل مشكلة CORS في المتصفحات تماماً مثل كودك القديم
+        fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`, {
+            method: "GET",
+            redirect: "follow"
         })
         .then(res => res.json())
         .then(data => {
@@ -327,22 +319,25 @@
                 studentId = data.studentId;
                 showPanel('panel-instructions');
             } else {
-                errBox.innerText = data.message;
+                errBox.innerText = "خطأ من السيرفر: " + data.message;
                 errBox.style.display = "block";
             }
         })
         .catch(err => {
             toggleLoader(false);
-            // حل بديل للمحاكاة الفورية عند التطوير المحلي في جيت هاب قبل ربط السكربت الفعلي
-            studentId = "STU_" + Math.floor(Math.random() * 10000);
-            showPanel('panel-instructions');
+            errBox.innerText = "⚠️ فشل الاتصال بالسيرفر، تحقق من تفعيل نشر تطبيق الويب واضبط الرابط.";
+            errBox.style.display = "block";
+            console.error(err);
         });
     }
 
-    // جلب الأسئلة من السيرفر وبدء التقييم
+    // جلب الأسئلة
     function fetchQuestionsAndStart() {
         toggleLoader(true);
-        fetch(`${API_URL}?action=getQuestions`)
+        fetch(`${API_URL}?action=getQuestions`, {
+            method: "GET",
+            redirect: "follow"
+        })
         .then(res => res.json())
         .then(data => {
             toggleLoader(false);
@@ -351,22 +346,18 @@
                 currentIndex = 0;
                 renderQuestion();
                 showPanel('panel-quiz');
+            } else {
+                alert("خطأ أثناء تحميل الأسئلة: " + data.message);
             }
         })
         .catch(err => {
             toggleLoader(false);
-            // بيانات افتراضية احتياطية للمعاينة الفورية في GitHub Pages في حال انقطاع السيرفر
-            questions = [
-                {id: "q1", text: "في Microsoft Word، ما هو الاختصار المستخدم لحفظ المستند الحالي؟", type: "Multiple", office: "word", options: [{key:"a", text:"Ctrl + S"}, {key:"b", text:"Ctrl + P"}, {key:"c", text:"Ctrl + N"}, {key:"d", text:"Ctrl + O"}]},
-                {id: "q2", text: "هل تستخدم الدالة SUM في Excel لجمع القيم الرقمية في نطاق محدد؟", type: "True or false", office: "excel", options: [{key:"a", text:"صحيح / نعم"}, {key:"b", text:"خطأ / لا"}]}
-            ];
-            currentIndex = 0;
-            renderQuestion();
-            showPanel('panel-quiz');
+            alert("⚠️ تعذر جلب ملف الأسئلة السحابي. تحقق من اتصالك أو إعدادات الشيت.");
+            console.error(err);
         });
     }
 
-    // بناء السؤال الحالي وعرض الخيارات المرتبطة بالمحارف
+    // بناء السؤال الحالي
     function renderQuestion() {
         clearInterval(quizTimer);
         selectedAnswer = "";
@@ -378,7 +369,6 @@
 
         const q = questions[currentIndex];
 
-        // التحقق من الانتقال الحركي بين أسئلة الوورد والاكسل لعرض واجهة الاستراحة بدقيقتين
         if (lastSection === "word" && q.office === "excel") {
             lastSection = q.office;
             startRestBreak();
@@ -386,7 +376,6 @@
         }
         lastSection = q.office;
 
-        // إدارة شارات تصنيف الأقسام للوورد والاكسل علوياً
         const badge = document.getElementById('section-badge');
         if (q.office === "excel") {
             badge.innerText = "Microsoft Excel | برنامج الجداول الإلكترونية";
@@ -400,20 +389,18 @@
         const container = document.getElementById('options-container');
         container.innerHTML = "";
 
-        // توليد خيارات الإجابة بمرونة (سواء زرين للصح والخطأ أو أربعة للمتعدد)
         q.options.forEach(opt => {
             const div = document.createElement('div');
             div.className = "option-card";
             div.innerHTML = `<strong>${opt.key.toUpperCase()})</strong> ${opt.text}`;
             div.onclick = function() {
-                document.querySelectorAll('.option-card').forEach(c => p=c.classList.remove('selected'));
+                document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 div.classList.add('selected');
                 selectedAnswer = opt.key;
             };
             container.appendChild(div);
         });
 
-        // تشغيل عداد الـ 15 ثانية الإلزامي للسؤال الحالي
         secondsLeft = 15;
         document.getElementById('clock-display').innerText = secondsLeft;
         
@@ -422,31 +409,31 @@
             document.getElementById('clock-display').innerText = secondsLeft;
             if (secondsLeft <= 0) {
                 clearInterval(quizTimer);
-                nextQuestion(true); // تخطي تلقائي لانتهاء الوقت وحفظ الخلية بقيمة 0
+                nextQuestion(true); 
             }
         }, 1000);
     }
 
-    // الانتقال وتخزين الإجابات بالسيرفر
+    // الانتقال وتحديث خلية السؤال بالسيرفر
     function nextQuestion(isTimeout = false) {
         clearInterval(quizTimer);
         const q = questions[currentIndex];
         const finalAns = isTimeout ? "0" : selectedAnswer;
 
-        // إرسال النتيجة فوراً وتحديث خلية السؤال للطالب الحالي
+        // إرسال الإجابة وحفظها خلفياً دون تعطيل الواجهة
         fetch(`${API_URL}?action=saveAnswer&studentId=${studentId}&questionId=${q.id}&answer=${encodeURIComponent(finalAns)}`, {
-            method: "POST",
-            mode: "no-cors"
+            method: "GET",
+            redirect: "follow"
         });
 
         currentIndex++;
         renderQuestion();
     }
 
-    // تفعيل نافذة الاستراحة الذكية لمدة دقيقتين كاملتين
+    // التحكم بالاستراحة (دقيقتين)
     function startRestBreak() {
         showPanel('panel-rest');
-        let restSeconds = 120; // دقيقتان
+        let restSeconds = 120; 
         
         restTimer = setInterval(() => {
             restSeconds--;
@@ -467,12 +454,12 @@
         renderQuestion();
     }
 
-    // إنهاء جلسة الاختبار وتوجيه السيرفر لحساب الإحصائيات والنسب سرياً
+    // إنهاء الاختبار وحساب الإحصائيات الشاملة والنسب المئوية
     function finishTest() {
         showPanel('panel-finish');
         fetch(`${API_URL}?action=finalizeTest&studentId=${studentId}`, {
-            method: "POST",
-            mode: "no-cors"
+            method: "GET",
+            redirect: "follow"
         });
     }
 </script>
