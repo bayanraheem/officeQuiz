@@ -40,7 +40,6 @@
             position: relative;
         }
 
-        /* اللوغو والهوية الرسمية لمؤسسة IAC المرفقة بملفك */
         .header-logo {
             display: inline-flex;
             align-items: center;
@@ -125,7 +124,6 @@
             font-weight: 600;
         }
 
-        /* واجهة الأسئلة والعداد الذكي */
         .badge {
             display: inline-block;
             padding: 6px 14px;
@@ -253,8 +251,7 @@
             <div class="timer-circle" id="clock-display">15</div>
         </div>
 
-        <div class="options-grid" id="options-container">
-            </div>
+        <div class="options-grid" id="options-container"></div>
 
         <button class="btn" onclick="nextQuestion(false)">الانتقال للسؤال التالي</button>
     </div>
@@ -271,9 +268,10 @@
         <p class="desc">شكراً لك، تم حفظ ردودك ومعالجة درجاتك ونسبك المئوية ضمن جدول البيانات السحابي لمؤسسة IAC بنجاح تام.</p>
     </div>
 </div>
+
 <script>
-    // ⚠️ استبدل هذا الرابط بدقة برابط الـ Web App الخاص بك بعد إجراء الـ Deploy الجديد
-    const API_URL = "https://script.google.com/macros/s/AKfycby6Ov2Mi7OxO-ibHeN5pV9eAk6A_ydAHXJLM-8-HsyIz92F1kQeVCQb0sdGB-yxV3xe/exec"; 
+    // الرابط المباشر لتطبيق الويب (Apps Script Web App)
+    const API_URL = "https://script.google.com/macros/s/AKfycbzGjGIpqJh-_tNcJ6yegNFcDEYXu6Dqybv_SudFEvHkRao-vY_S_82PWRqY4p2Z-2FG/exec"; 
 
     let studentId = "";
     let questions = [];
@@ -293,7 +291,6 @@
         document.getElementById('loading').style.display = show ? "flex" : "none";
     }
 
-    // إرسال الاسم وحل مشكلة الـ CORS عبر الـ GET الموجه
     function submitName() {
         const name = document.getElementById('input-student-name').value.trim();
         const errBox = document.getElementById('name-error');
@@ -307,7 +304,6 @@
         errBox.style.display = "none";
         toggleLoader(true);
 
-        // إرسال كـ GET متبوع بالتوجيه الآمن لحل مشكلة CORS في المتصفحات تماماً مثل كودك القديم
         fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`, {
             method: "GET",
             redirect: "follow"
@@ -331,7 +327,6 @@
         });
     }
 
-    // جلب الأسئلة
     function fetchQuestionsAndStart() {
         toggleLoader(true);
         fetch(`${API_URL}?action=getQuestions`, {
@@ -344,6 +339,7 @@
             if (data.status === "success") {
                 questions = data.questions;
                 currentIndex = 0;
+                lastSection = (questions.length > 0) ? questions[0].office : "";
                 renderQuestion();
                 showPanel('panel-quiz');
             } else {
@@ -357,7 +353,6 @@
         });
     }
 
-    // بناء السؤال الحالي
     function renderQuestion() {
         clearInterval(quizTimer);
         selectedAnswer = "";
@@ -369,8 +364,9 @@
 
         const q = questions[currentIndex];
 
+        // في حال الانتقال الفعلي من الورد إلى الإكسل، شغل الاستراحة أولاً
         if (lastSection === "word" && q.office === "excel") {
-            lastSection = q.office;
+            lastSection = q.office; 
             startRestBreak();
             return;
         }
@@ -414,13 +410,14 @@
         }, 1000);
     }
 
-    // الانتقال وتحديث خلية السؤال بالسيرفر
     function nextQuestion(isTimeout = false) {
         clearInterval(quizTimer);
-        const q = questions[currentIndex];
-        const finalAns = isTimeout ? "0" : selectedAnswer;
+        if (currentIndex >= questions.length) return;
 
-        // إرسال الإجابة وحفظها خلفياً دون تعطيل الواجهة
+        const q = questions[currentIndex];
+        const finalAns = isTimeout ? "0" : (selectedAnswer || "0");
+
+        // إرسال الإجابة وحفظها سحابياً بالخلفية
         fetch(`${API_URL}?action=saveAnswer&studentId=${studentId}&questionId=${q.id}&answer=${encodeURIComponent(finalAns)}`, {
             method: "GET",
             redirect: "follow"
@@ -430,7 +427,6 @@
         renderQuestion();
     }
 
-    // التحكم بالاستراحة (دقيقتين)
     function startRestBreak() {
         showPanel('panel-rest');
         let restSeconds = 120; 
@@ -454,7 +450,6 @@
         renderQuestion();
     }
 
-    // إنهاء الاختبار وحساب الإحصائيات الشاملة والنسب المئوية
     function finishTest() {
         showPanel('panel-finish');
         fetch(`${API_URL}?action=finalizeTest&studentId=${studentId}`, {
