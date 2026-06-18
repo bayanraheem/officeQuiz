@@ -40,7 +40,7 @@
             position: relative;
         }
 
-        .header-logo {
+        /* .header-logo {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -60,6 +60,31 @@
             margin-right: 10px;
             border-right: 1px solid rgba(255,255,255,0.3);
             padding-right: 10px;
+        } */
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* مسافة متناسقة بين اللوغو والنص */
+            background: #ffffff; /* خلفية بيضاء */
+            padding: 10px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* ظل ناعم يناسب الخلفية البيضاء */
+            border: 1px solid #e2e8f0; /* إطار خفيف جداً لتحديد التصميم */
+        }
+
+        .header-logo img {
+            height: 45px; /* حجم مثالي واحترافي للشعار */
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-logo .brand-text {
+            color: var(--iac-primary); /* اللون الأخضر الخاص بالمؤسسة */
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.5px;
         }
 
         h2 {
@@ -214,7 +239,10 @@
 <div class="container">
     <div class="loading-overlay" id="loading">جاري معالجة الطلب ...</div>
     
-    <div class="header-logo">IAC <span>International Relief</span></div>
+   <div class="header-logo">
+        <img src="https://i.postimg.cc/BvLv7FDL/images.jpg" alt="IAC Logo">
+        <span class="brand-text">مؤسسة الإغاثة IAC</span>
+    </div>
 
     <div id="panel-name" class="step-panel active">
         <h2> اختبار تقييم مهارات office</h2>
