@@ -193,7 +193,9 @@
             transition: all 0.2s;
             font-weight: 500;
         }
-
+        .option-card {
+            text-align: right; /* مريح جداً للقراءة باللغة العربية */
+            transition: all 0.2s; }
         .option-card:hover { border-color: var(--iac-primary); }
         .option-card.selected {
             background: var(--iac-primary);
@@ -416,15 +418,18 @@
         q.options.forEach(opt => {
             const div = document.createElement('div');
             div.className = "option-card";
-            div.innerHTML = `<strong>${opt.key.toUpperCase()})</strong> ${opt.text}`;
+            
+            // إظهار نص الإجابة فقط بدون الحرف
+            div.innerHTML = `${opt.text}`; 
+            
             div.onclick = function() {
                 document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
                 div.classList.add('selected');
-                selectedAnswer = opt.key;
+                // النظام ما زال يحتفظ بالحرف داخلياً (a, b, c, d) ليرسله للسيرفر
+                selectedAnswer = opt.key; 
             };
             container.appendChild(div);
         });
-
         secondsLeft = 15;
         document.getElementById('clock-display').innerText = secondsLeft;
         
