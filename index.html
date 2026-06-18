@@ -742,14 +742,34 @@
         </p>
     </div>
 
-    <div id="panel-name" class="step-panel active">
+    <!-- <div id="panel-name" class="step-panel active">
         <h2> اختبار تقييم مهارات office</h2>
         <p class="desc">يرجى كتابة الاسم الثلاثي باللغة العربية حصراً لبدء جلسة الاختبار.</p>
         <div class="alert-error" id="name-error"></div>
         <input type="text" id="input-student-name" placeholder="أدخل اسمك الثلاثي هنا...">
         <button class="btn" onclick="submitName()">التالي</button>
-    </div>
-
+    </div> -->
+    <div id="panel-name" class="step-panel active">
+            <h2> اختبار تقييم مهارات office</h2>
+            <p class="desc">يرجى كتابة الاسم الثلاثي واختيار العمر والمستوى التعليمي لبدء جلسة الاختبار.</p>
+            <div class="alert-error" id="name-error"></div>
+            
+            <input type="text" id="input-student-name" placeholder="أدخل اسمك الثلاثي هنا...">
+            
+            <select id="select-student-age" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; margin-bottom: 15px; font-family: 'Tajawal', sans-serif; text-align: center; direction: rtl;">
+                <option value="">-- اختر العمر --</option>
+                </select>
+    
+            <select id="select-student-education" style="width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; margin-bottom: 20px; font-family: 'Tajawal', sans-serif; text-align: center; direction: rtl;">
+                <option value="">-- اختر المستوى التعليمي --</option>
+                <option value="ابتدائي">ابتدائي</option>
+                <option value="اعدادي">اعدادي</option>
+                <option value="ثانوي">ثانوي</option>
+                <option value="جامعي">جامعي</option>
+            </select>
+    
+            <button class="btn" onclick="submitName()">التالي</button>
+        </div>
     <div id="panel-instructions" class="step-panel">
         <h2>توجيهات تحديد المستوى</h2>
         <p class="desc" style="background: #f0fdf4; padding: 15px; border-left: 4px solid var(--iac-primary); border-radius: 6px; text-align: justify;">
@@ -800,9 +820,9 @@
 
     // إعدادات وقت الفرونت إند المبدئية لحجب النموذج محلياً قبل إرسال الطلب للسيرفر
     const FRONT_CONFIG = {
-        date: "2026-06-20", // تاريخ الاختبار المعتمد
+        date: "2026-06-18", // تاريخ الاختبار المعتمد
         startHour: 10,       // 10 صباحاً
-        endHour: 16         // 4 عصراً
+        endHour: 23         // 4 عصراً
     };
 
     let studentId = "";
@@ -843,20 +863,94 @@
         document.getElementById('loading').style.display = show ? "flex" : "none";
     }
 
+    // function submitName() {
+    //     const name = document.getElementById('input-student-name').value.trim();
+    //     const errBox = document.getElementById('name-error');
+        
+    //     const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+    //     if (!name || name === "" || !arabicRegex.test(name)) {
+    //         errBox.innerText = "⚠️ خطأ: يجب كتابة الاسم الثلاثي باللغة العربية فقط وبدون أرقام.";
+    //         errBox.style.display = "block";
+    //         return;
+    //     }
+    //     errBox.style.display = "none";
+    //     toggleLoader(true);
+
+    //     fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`, {
+    //         method: "GET",
+    //         redirect: "follow"
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         toggleLoader(false);
+    //         if (data.status === "success") {
+    //             studentId = data.studentId;
+    //             showPanel('panel-instructions');
+    //         } else if (data.status === "time_locked") {
+    //             // إظهار لوحة المنع الصارمة المرتجعة من السيرفر
+    //             document.getElementById('lock-message').innerText = data.message;
+    //             showPanel('panel-locked');
+    //         } else {
+    //             errBox.innerText = "خطأ من السيرفر: " + data.message;
+    //             errBox.style.display = "block";
+    //         }
+    //     })
+    //     .catch(err => {
+    //         toggleLoader(false);
+    //         errBox.innerText = "⚠️ فشل الاتصال بالسيرفر، تحقق من تفعيل نشر تطبيق الويب واضبط الرابط.";
+    //         errBox.style.display = "block";
+    //         console.error(err);
+    //     });
+    // }
+// توليد قائمة الأعمار من 18 إلى 50 عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', () => {
+        checkLocalTimeWindow();
+        
+        const ageSelect = document.getElementById('select-student-age');
+        for (let age = 18; age <= 50; age++) {
+            const option = document.createElement('option');
+            option.value = age;
+            option.text = age;
+            ageSelect.appendChild(option);
+        }
+    });
+
     function submitName() {
         const name = document.getElementById('input-student-name').value.trim();
+        const age = document.getElementById('select-student-age').value;
+        const education = document.getElementById('select-student-education').value;
         const errBox = document.getElementById('name-error');
         
         const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+        
+        // التحقق من الاسم
         if (!name || name === "" || !arabicRegex.test(name)) {
             errBox.innerText = "⚠️ خطأ: يجب كتابة الاسم الثلاثي باللغة العربية فقط وبدون أرقام.";
             errBox.style.display = "block";
             return;
         }
+        
+        // التحقق من العمر
+        if (!age) {
+            errBox.innerText = "⚠️ خطأ: يرجى اختيار العمر من القائمة.";
+            errBox.style.display = "block";
+            return;
+        }
+
+        // التحقق من المستوى التعليمي
+        if (!education) {
+            errBox.innerText = "⚠️ خطأ: يرجى اختيار المستوى التعليمي من القائمة.";
+            errBox.style.display = "block";
+            return;
+        }
+
         errBox.style.display = "none";
         toggleLoader(true);
 
-        fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`, {
+        // إرسال الاسم، العمر، والمستوى التعليمي للسيرفر
+        const url = `${API_URL}?action=startTest&name=${encodeURIComponent(name)}&age=${encodeURIComponent(age)}&education=${encodeURIComponent(education)}`;
+        
+        fetch(url, {
             method: "GET",
             redirect: "follow"
         })
@@ -867,7 +961,6 @@
                 studentId = data.studentId;
                 showPanel('panel-instructions');
             } else if (data.status === "time_locked") {
-                // إظهار لوحة المنع الصارمة المرتجعة من السيرفر
                 document.getElementById('lock-message').innerText = data.message;
                 showPanel('panel-locked');
             } else {
@@ -882,7 +975,6 @@
             console.error(err);
         });
     }
-
     function fetchQuestionsAndStart() {
         toggleLoader(true);
         fetch(`${API_URL}?action=getQuestions`, {
