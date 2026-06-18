@@ -816,7 +816,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzHWNJWGWixgK_zxEo_4ULl4IDtG2oNrHoE9IG-XoPvBd5F-yj5E5sVB1p2vQ_dwo07/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyw8o9icw7voyIgqFaOhg4WsYxcHNnS3bLgeZ7ASvava8RA0P_j5HDmG-IiLXaQuwY9/exec"; 
 
     // إعدادات وقت الفرونت إند المبدئية لحجب النموذج محلياً قبل إرسال الطلب للسيرفر
     const FRONT_CONFIG = {
@@ -839,20 +839,26 @@
         checkLocalTimeWindow();
     });
 
-    function checkLocalTimeWindow() {
-        const now = new Date();
-        
-        // تحويل وقت جهاز المستخدم بصيغة سنة-شهر-يوم للمقارنة
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const localDateStr = `${year}-${month}-${day}`;
-        const localHour = now.getHours();
+function checkLocalTimeWindow() {
+    const now = new Date();
+    
+    // تحويل وقت جهاز المستخدم بصيغة سنة-شهر-يوم للمقارنة الصحيحة
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+    const localHour = now.getHours();
 
-        if (localDateStr !== FRONT_CONFIG.date || localHour < FRONT_CONFIG.startHour || localHour >= FRONT_CONFIG.endHour) {
-            showPanel('panel-locked');
-        }
+    // إذا لم يطابق التاريخ أو كان خارج النطاق الساعي، يظهر القفل فوراً
+    if (localDateStr !== FRONT_CONFIG.date || localHour < FRONT_CONFIG.startHour || localHour >= FRONT_CONFIG.endHour) {
+        showPanel('panel-locked');
     }
+}
+
+function showPanel(id) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
 
     function showPanel(id) {
         document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
