@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -453,6 +453,528 @@
         const finalAns = isTimeout ? "0" : (selectedAnswer || "0");
 
         // إرسال الإجابة وحفظها سحابياً بالخلفية
+        fetch(`${API_URL}?action=saveAnswer&studentId=${studentId}&questionId=${q.id}&answer=${encodeURIComponent(finalAns)}`, {
+            method: "GET",
+            redirect: "follow"
+        });
+
+        currentIndex++;
+        renderQuestion();
+    }
+
+    function startRestBreak() {
+        showPanel('panel-rest');
+        let restSeconds = 120; 
+        
+        restTimer = setInterval(() => {
+            restSeconds--;
+            let m = Math.floor(restSeconds / 60);
+            let s = restSeconds % 60;
+            document.getElementById('rest-clock-display').innerText = 
+                (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+            
+            if (restSeconds <= 0) {
+                skipRest();
+            }
+        }, 1000);
+    }
+
+    function skipRest() {
+        clearInterval(restTimer);
+        showPanel('panel-quiz');
+        renderQuestion();
+    }
+
+    function finishTest() {
+        showPanel('panel-finish');
+        fetch(`${API_URL}?action=finalizeTest&studentId=${studentId}`, {
+            method: "GET",
+            redirect: "follow"
+        });
+    }
+</script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> مؤسسة الإغاثة IAC | اختبار تحديد المستوى </title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --iac-primary: #127c3a;
+            --iac-dark: #0b4f24;
+            --bg-color: #f0f4f3;
+            --glass: rgba(255, 255, 255, 0.95);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --text-color: #2c3e50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--glass);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            text-align: center;
+            position: relative;
+        }
+
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #ffffff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-logo img {
+            height: 45px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-logo .brand-text {
+            color: var(--iac-primary);
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: var(--iac-dark);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p.desc {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 25px;
+        }
+
+        .step-panel { display: none; }
+        .step-panel.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--iac-primary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--iac-primary), var(--iac-dark));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(10, 77, 41, 0.3);
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .badge-word { background: #e0f2fe; color: #0369a1; }
+        .badge-excel { background: #dcfce7; color: #15803d; }
+
+        .timer-circle {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--iac-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--iac-dark);
+            margin: 15px 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .option-card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: right;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .option-card {
+            text-align: right;
+            transition: all 0.2s; 
+        }
+        .option-card:hover { border-color: var(--iac-primary); }
+        .option-card.selected {
+            background: var(--iac-primary);
+            color: #fff;
+            border-color: var(--iac-primary);
+        }
+
+        .bullet-instructions {
+            text-align: right;
+            margin: 20px 15px 25px 0;
+            line-height: 2;
+            color: #4a5568;
+        }
+
+        .rest-clock {
+            font-size: 36px;
+            font-weight: 800;
+            color: #dd6b20;
+            margin: 20px 0;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--iac-dark);
+            border-radius: 16px;
+            z-index: 10;
+        }
+
+        /* تنسيقات واجهة القفل والمستندات المغلقة */
+        .lock-container {
+            padding: 20px;
+        }
+        .lock-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #e53e3e;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="loading-overlay" id="loading">جاري معالجة الطلب ...</div>
+    
+    <div class="header-logo">
+        <img src="https://i.postimg.cc/BvLv7FDL/images.jpg" alt="IAC Logo">
+        <span class="brand-text">مؤسسة الإغاثة</span>
+    </div>
+
+    <div id="panel-locked" class="step-panel lock-container">
+        <div class="lock-icon">🔒</div>
+        <h2>الرابط مغلق حالياً</h2>
+        <p class="desc" id="lock-message" style="background: #fff5f5; color: #c53030; padding: 15px; border-radius: 8px; border: 1px solid #fed7d7;">
+            هذا الرابط مخصص لجلسة اختبارات مؤسسة الإغاثة IAC وغير متاح للعامة حالياً. للمزيد من المعلومات يرجى مراجعة إدارة مؤسسة الإغاثة.
+        </p>
+    </div>
+
+    <div id="panel-name" class="step-panel active">
+        <h2> اختبار تقييم مهارات office</h2>
+        <p class="desc">يرجى كتابة الاسم الثلاثي باللغة العربية حصراً لبدء جلسة الاختبار.</p>
+        <div class="alert-error" id="name-error"></div>
+        <input type="text" id="input-student-name" placeholder="أدخل اسمك الثلاثي هنا...">
+        <button class="btn" onclick="submitName()">التالي</button>
+    </div>
+
+    <div id="panel-instructions" class="step-panel">
+        <h2>توجيهات تحديد المستوى</h2>
+        <p class="desc" style="background: #f0fdf4; padding: 15px; border-left: 4px solid var(--iac-primary); border-radius: 6px; text-align: justify;">
+            هذا الاختبار مخصص لتحديد المستوى فقط، وليس مطلوبًا منك الإجابة على جميع الأسئلة. إذا واجهت سؤالًا لا تعرف إجابته، يُرجى تركه فارغًا وعدم التخمين، وذلك لمساعدتنا على تقييم مستواك الحقيقي بدقة وتقديم التدريب المناسب لك.
+        </p>
+        <button class="btn" onclick="showPanel('panel-notes')" style="margin-top: 15px;">موافق، التالي</button>
+    </div>
+
+    <div id="panel-notes" class="step-panel">
+        <h2>ملاحظات الجلسة الصارمة</h2>
+        <ul class="bullet-instructions">
+            <li>⛔ <strong>العودة للوراء:</strong> لا يمكن العودة للسؤال السابق بعد تجاوزه مطلقاً.</li>
+            <li>⏱️ <strong>مؤقت السؤال:</strong> مدة كل سؤال 30 ثانية فقط، وينتقل التقييم ذاتياً بعدها.</li>
+            <li>🚀 <strong>التخطي السريع:</strong> إذا كنت لا تعرف الجواب، اضغط على الانتقال فوراً لتركه فارغاً.</li>
+            <li>💾 <strong>اعتماد الإجابة:</strong> يجب الضغط على زر الانتقال لضمان حفظ الخيار المحدد بالسيرفر.</li>
+        </ul>
+        <button class="btn" onclick="fetchQuestionsAndStart()">ابدأ الاختبار الفعلي</button>
+    </div>
+
+    <div id="panel-quiz" class="step-panel">
+        <div id="section-badge" class="badge"></div>
+        <h2 id="quiz-question-text">جاري مزامنة نص السؤال...</h2>
+        
+        <div>
+            <div class="timer-circle" id="clock-display">30</div>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <button class="btn" onclick="nextQuestion(false)">الانتقال للسؤال التالي</button>
+    </div>
+
+    <div id="panel-rest" class="step-panel">
+        <h2>استرح قليلاً ☕</h2>
+        <p class="desc">لقد أكملت بنجاح قسم أسئلة الوورد. خذ قسطاً من الراحة قبل الانتقال التلقائي إلى قسم الإكسل.</p>
+        <div class="rest-clock" id="rest-clock-display">02:00</div>
+        <button class="btn" style="background: #dd6b20;" onclick="skipRest()">تخطي الاستراحة والمتابعة الآن</button>
+    </div>
+
+    <div id="panel-finish" class="step-panel">
+        <h2 style="color: var(--iac-primary); margin-bottom: 10px;">تم إنهاء التقييم بنجاح!</h2>
+        <p class="desc">شكراً لك، تم حفظ اجوبتك بنجاح </p>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzHWNJWGWixgK_zxEo_4ULl4IDtG2oNrHoE9IG-XoPvBd5F-yj5E5sVB1p2vQ_dwo07/exec"; 
+
+    // إعدادات وقت الفرونت إند المبدئية لحجب النموذج محلياً قبل إرسال الطلب للسيرفر
+    const FRONT_CONFIG = {
+        date: "2026-06-21", // تاريخ الاختبار المعتمد
+        startHour: 10,       // 10 صباحاً
+        endHour: 16         // 4 عصراً
+    };
+
+    let studentId = "";
+    let questions = [];
+    let currentIndex = 0;
+    let selectedAnswer = "";
+    let quizTimer = null;
+    let restTimer = null;
+    let secondsLeft = 30;
+    let lastSection = "";
+
+    // فحص أولي عند تحميل الصفحة مباشرة
+    window.addEventListener('DOMContentLoaded', () => {
+        checkLocalTimeWindow();
+    });
+
+    function checkLocalTimeWindow() {
+        const now = new Date();
+        
+        // تحويل وقت جهاز المستخدم بصيغة سنة-شهر-يوم للمقارنة
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const localDateStr = `${year}-${month}-${day}`;
+        const localHour = now.getHours();
+
+        if (localDateStr !== FRONT_CONFIG.date || localHour < FRONT_CONFIG.startHour || localHour >= FRONT_CONFIG.endHour) {
+            showPanel('panel-locked');
+        }
+    }
+
+    function showPanel(id) {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function toggleLoader(show) {
+        document.getElementById('loading').style.display = show ? "flex" : "none";
+    }
+
+    function submitName() {
+        const name = document.getElementById('input-student-name').value.trim();
+        const errBox = document.getElementById('name-error');
+        
+        const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+        if (!name || name === "" || !arabicRegex.test(name)) {
+            errBox.innerText = "⚠️ خطأ: يجب كتابة الاسم الثلاثي باللغة العربية فقط وبدون أرقام.";
+            errBox.style.display = "block";
+            return;
+        }
+        errBox.style.display = "none";
+        toggleLoader(true);
+
+        fetch(`${API_URL}?action=startTest&name=${encodeURIComponent(name)}`, {
+            method: "GET",
+            redirect: "follow"
+        })
+        .then(res => res.json())
+        .then(data => {
+            toggleLoader(false);
+            if (data.status === "success") {
+                studentId = data.studentId;
+                showPanel('panel-instructions');
+            } else if (data.status === "time_locked") {
+                // إظهار لوحة المنع الصارمة المرتجعة من السيرفر
+                document.getElementById('lock-message').innerText = data.message;
+                showPanel('panel-locked');
+            } else {
+                errBox.innerText = "خطأ من السيرفر: " + data.message;
+                errBox.style.display = "block";
+            }
+        })
+        .catch(err => {
+            toggleLoader(false);
+            errBox.innerText = "⚠️ فشل الاتصال بالسيرفر، تحقق من تفعيل نشر تطبيق الويب واضبط الرابط.";
+            errBox.style.display = "block";
+            console.error(err);
+        });
+    }
+
+    function fetchQuestionsAndStart() {
+        toggleLoader(true);
+        fetch(`${API_URL}?action=getQuestions`, {
+            method: "GET",
+            redirect: "follow"
+        })
+        .then(res => res.json())
+        .then(data => {
+            toggleLoader(false);
+            if (data.status === "success") {
+                questions = data.questions;
+                currentIndex = 0;
+                lastSection = (questions.length > 0) ? questions[0].office : "";
+                renderQuestion();
+                showPanel('panel-quiz');
+            } else if (data.status === "time_locked") {
+                document.getElementById('lock-message').innerText = data.message;
+                showPanel('panel-locked');
+            } else {
+                alert("خطأ أثناء تحميل الأسئلة: " + data.message);
+            }
+        })
+        .catch(err => {
+            toggleLoader(false);
+            alert("⚠️ تعذر جلب ملف الأسئلة السحابي. تحقق من اتصالك أو إعدادات الشيت.");
+            console.error(err);
+        });
+    }
+
+    function renderQuestion() {
+        clearInterval(quizTimer);
+        selectedAnswer = "";
+        
+        if (currentIndex >= questions.length) {
+            finishTest();
+            return;
+        }
+
+        const q = questions[currentIndex];
+
+        if (lastSection === "word" && q.office === "excel") {
+            lastSection = q.office; 
+            startRestBreak();
+            return;
+        }
+        lastSection = q.office;
+
+        const badge = document.getElementById('section-badge');
+        if (q.office === "excel") {
+            badge.innerText = "Microsoft Excel | برنامج الجداول الإلكترونية";
+            badge.className = "badge badge-excel";
+        } else {
+            badge.innerText = "Microsoft Word | برنامج معالجة النصوص";
+            badge.className = "badge badge-word";
+        }
+
+        document.getElementById('quiz-question-text').innerText = q.text;
+        const container = document.getElementById('options-container');
+        container.innerHTML = "";
+
+        q.options.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = "option-card";
+            div.innerHTML = `${opt.text}`; 
+            
+            div.onclick = function() {
+                document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedAnswer = opt.key; 
+            };
+            container.appendChild(div);
+        });
+        secondsLeft = 30;
+        document.getElementById('clock-display').innerText = secondsLeft;
+        
+        quizTimer = setInterval(() => {
+            secondsLeft--;
+            document.getElementById('clock-display').innerText = secondsLeft;
+            if (secondsLeft <= 0) {
+                clearInterval(quizTimer);
+                nextQuestion(true); 
+            }
+        }, 1000);
+    }
+
+    function nextQuestion(isTimeout = false) {
+        clearInterval(quizTimer);
+        if (currentIndex >= questions.length) return;
+
+        const q = questions[currentIndex];
+        const finalAns = isTimeout ? "0" : (selectedAnswer || "0");
+
         fetch(`${API_URL}?action=saveAnswer&studentId=${studentId}&questionId=${q.id}&answer=${encodeURIComponent(finalAns)}`, {
             method: "GET",
             redirect: "follow"
